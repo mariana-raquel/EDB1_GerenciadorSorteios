@@ -84,7 +84,9 @@ int main() {
             printVermelho("Escolha uma opção válida!\n");
         }
     }
+    
     printMagenta("\nObrigado por utilizar nosso serviços!\n\n");
+    liberarTabela(tabelaHash);
 
     return 0;
 }

@@ -5,15 +5,30 @@
 #include "../include/structs.h"
 #include "../include/cores.h"
 #include "../include/tabela.h"
-#include "../include/sorteio.h"
 #include "../include/utils.h"
 
 
+/**
+ * @brief Método responsável por criar a função hash que 
+ * servirá para encontrar os índices necessários
+ * 
+ * @param chave
+ * @param tamanho
+ * 
+ * @return
+ */
 int funcaoHash(int chave, int tamanho) {
     return chave % tamanho;
 }
 
 
+/**
+ * @brief Método responsável por inserir um sorteio na tabela
+ * 
+ * @param tabelaHash
+ * @param sorteio
+ * @param chave
+ */
 void inserirConcursoTabela(TabelaHash *tabelaHash, Sorteio sorteio, int chave) {
     if(buscarConcursoTabela(tabelaHash, chave) == NULL) {
         int indice = funcaoHash(chave, tabelaHash->tamanho);
@@ -23,6 +38,8 @@ void inserirConcursoTabela(TabelaHash *tabelaHash, Sorteio sorteio, int chave) {
         tabelaHash->tabela[indice] = novo_no;
         tabelaHash->qtdSorteios++;
 
+        adicionarNumerosSorteados(tabelaHash, sorteio.numSorteados);
+
     } else {
         printAmarelo("\nJá existe um sorteio na tabela com o código: [");
         printf("%i", chave);
@@ -31,11 +48,20 @@ void inserirConcursoTabela(TabelaHash *tabelaHash, Sorteio sorteio, int chave) {
 }
 
 
-Sorteio* buscarConcursoTabela(TabelaHash *tabela, int chave) {
+/**
+ * @brief Método responsável por buscar um concurso na tabela
+ * através de seu código
+ * 
+ * @param tabelaHash
+ * @param chave
+ * 
+ * @return
+ */
+Sorteio* buscarConcursoTabela(TabelaHash *tabelaHash, int chave) {
     Sorteio *sorteio = NULL;
 
-    int indice = funcaoHash(chave, tabela->tamanho);
-    No* no = tabela->tabela[indice];
+    int indice = funcaoHash(chave, tabelaHash->tamanho);
+    No* no = tabelaHash->tabela[indice];
 
     while(no != NULL){
         if(no->sorteio.codigo == chave) {
@@ -48,9 +74,16 @@ Sorteio* buscarConcursoTabela(TabelaHash *tabela, int chave) {
 }
 
 
-void removerConcursoTabela(TabelaHash *tabela, int chave) {
-    int indice = funcaoHash(chave, tabela->tamanho);
-    No *no = tabela->tabela[indice];
+/**
+ * @brief Método responsável por remover um concurso na tabela
+ * através de seu código
+ * 
+ * @param tabelaHash
+ * @param chave
+ */
+void removerConcursoTabela(TabelaHash *tabelaHash, int chave) {
+    int indice = funcaoHash(chave, tabelaHash->tamanho);
+    No *no = tabelaHash->tabela[indice];
 
     if(no != NULL) {
         No *anterior = NULL;
@@ -70,10 +103,10 @@ void removerConcursoTabela(TabelaHash *tabela, int chave) {
             } else {
                 anterior->proximo = atual->proximo;
             }
-
+            removerNumerosSorteados(tabelaHash, atual->sorteio.numSorteados);
             free(atual);
 
-            tabela->qtdSorteios--;
+            tabelaHash->qtdSorteios--;
 
             printVerde("\nSorteio com a chave [");
             printf("%i", chave);
@@ -84,26 +117,14 @@ void removerConcursoTabela(TabelaHash *tabela, int chave) {
 }
 
 
-void visualizarConcursosTabela(TabelaHash *tabela) {
-    printf("INICIO\n");
-    for(int i = 0; i < tabela->tamanho; i++) {
-        if(tabela->tabela[i] == NULL) {
-            printf("\t%i\t---\n", i);
-        } else {
-            No *temp = tabela->tabela[i];
-            printf("\t%i\t", i);
-            while(temp != NULL) {
-                printf("%i\t", temp->sorteio.codigo);
-                temp = temp->proximo;
-            }
-            printf("\n");
-        }
-    }
-    printf("FIM\n");
-}
-
-
-void carregarConcursosArquivoTabela(TabelaHash *tabela, char *nomeArquivo) {
+/**
+ * @brief Método responsável por carregar informações de concursos
+ * com base em um arquivo csv ou tsv
+ * 
+ * @param tabelaHash
+ * @param nomeArquivo
+ */
+void carregarConcursosArquivoTabela(TabelaHash *tabelaHash, char *nomeArquivo) {
     FILE *file;
     char *regex;
     if(strstr(nomeArquivo, "tsv") == 0) {
@@ -140,7 +161,7 @@ void carregarConcursosArquivoTabela(TabelaHash *tabela, char *nomeArquivo) {
                 cont++;
                 pt = strtok(NULL, regex);
             }
-            criarSorteioByArquivo(tabela, numSorteio, data, numerosSorteados);
+            criarSorteioByArquivo(tabelaHash, numSorteio, data, numerosSorteados);
         }
         contLinha++;
     }
@@ -148,23 +169,5 @@ void carregarConcursosArquivoTabela(TabelaHash *tabela, char *nomeArquivo) {
     printf("%s", nomeArquivo);
     printVerde("] importados com sucesso!\n");
     fclose(file);
-}
-
-
-void liberarTabela(TabelaHash *tabela) {
-    for(int i = 0; i < tabela->tamanho; i++){
-        No* no = tabela->tabela[i];
-        
-        while(no != NULL) {
-            No* temp = no;
-            no = no->proximo;
-            
-            free(temp);
-        }
-    }
-    
-    free(tabela->tabela);
-    free(tabela);
-    iniciarTabela(tabela);
 }
 
