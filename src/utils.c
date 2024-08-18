@@ -1,11 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../include/structs.h"
 #include "../include/tabela.h"
 #include "../include/estatisticas.h"
 #include "../include/cores.h"
 
 
+/**
+ * @brief Método responsável por inicialiar a 
+ * estrutura da tabela hash
+ * 
+ * @param tabelaHash
+ */
 void iniciarTabela(TabelaHash *tabelaHash) {
     tabelaHash->qtdSorteios = 0;
     tabelaHash->tamanho = 10;
@@ -13,9 +20,40 @@ void iniciarTabela(TabelaHash *tabelaHash) {
     for(int i = 0; i < tabelaHash->tamanho; i++) {
         tabelaHash->tabela[i] = NULL;
     }
+    for(int i = 0; i < 60; i++) {
+        tabelaHash->numerosSorteados[i].numero = i+1;
+        tabelaHash->numerosSorteados[i].qtd = 0;
+    }
 }
 
 
+/**
+ * @brief Método responsável por montar a estrutura do Sorteio
+ * com base nas informações vindas do arquivo
+ * 
+ * @param tabelaHash
+ * @param numSorteio
+ * @param data
+ * @param numSorteados
+ */
+void criarSorteioByArquivo(TabelaHash *tabela, int numSorteio, char *data, int *numSorteados) {
+    Sorteio sorteio;
+
+    sorteio.codigo = numSorteio;
+    strcpy(sorteio.data, data);
+    for(int i = 0; i < 6; i++) {
+        sorteio.numSorteados[i] = numSorteados[i];
+    }
+
+    inserirConcursoTabela(tabela, sorteio, sorteio.codigo);
+}
+
+
+/**
+ * @brief Método responsável por um imprimir um sorteio
+ * 
+ * @param sorteio
+ */
 void imprimirSorteio(Sorteio sorteio) {
     printf("Sorteio: %i\tData: %s\tNúmeros Sorteados: ", sorteio.codigo, sorteio.data);
     for(int j = 0; j < 6; j++) {
@@ -25,6 +63,39 @@ void imprimirSorteio(Sorteio sorteio) {
 }
 
 
+/**
+ * @brief Método responsável por preenchar a lista dos números já sorteados
+ * 
+ * @param tabelaHash
+ * @param numeros
+ */
+void adicionarNumerosSorteados(TabelaHash *tabelaHash, int *numeros) {
+    for(int i = 0; i < 6; i++) {
+        int ind = numeros[i]-1;
+        tabelaHash->numerosSorteados[ind].qtd++;
+    }
+}
+
+
+/**
+ * @brief Método responsável por preenchar a lista dos números já sorteados
+ * 
+ * @param tabelaHash
+ * @param numeros
+ */
+void removerNumerosSorteados(TabelaHash *tabelaHash, int *numeros) {
+    for(int i = 0; i < 6; i++) {
+        int ind = numeros[i]-1;
+        tabelaHash->numerosSorteados[ind].qtd--;
+    }
+}
+
+/**
+ * @brief Método auxiliar para a inserção 
+ * de um novo concurso na tabela 
+ * 
+ * @param tabelaHash
+ */
 void inserirConcurso(TabelaHash *tabelaHash) {
     Sorteio sorteio;
     printCiano("Qual o número do sorteio que você deseja criar? ");
@@ -42,37 +113,60 @@ void inserirConcurso(TabelaHash *tabelaHash) {
 }
 
 
+/**
+ * @brief Método auxiliar para a busca de um 
+ * concurso na tabela
+ * 
+ * @param tabelaHash
+ */
 void buscarConcurso(TabelaHash *tabelaHash) {
-    int chave = 0;
+    if(tabelaHash->qtdSorteios > 0) {
+        int chave = 0;
 
-    printCiano("Qual o número do sorteio que você deseja buscar? ");
-    scanf("%i", &chave);
+        printCiano("Qual o número do sorteio que você deseja buscar? ");
+        scanf("%i", &chave);
 
-    Sorteio *sorteio = buscarConcursoTabela(tabelaHash, chave);
+        Sorteio *sorteio = buscarConcursoTabela(tabelaHash, chave);
 
-    if(sorteio == NULL) {
-        printAmarelo("\nSorteio com a chave [");
-        printf("%i", chave);
-        printAmarelo("] não encontrado!\n");
-    } else {
-        imprimirSorteio(*sorteio);
+        if(sorteio == NULL) {
+            printAmarelo("\nSorteio com a chave [");
+            printf("%i", chave);
+            printAmarelo("] não encontrado!\n");
+        } else {
+            imprimirSorteio(*sorteio);
+        }
+     } else {
+        printAmarelo("Não existem concursos armazenados na tabela!\n");
     }
-
 }
 
 
+/**
+ * @brief Método auxiliar para a remoção
+ * de um concurso da tabela
+ * 
+ * @param tabelaHash
+ */
 void removerConcurso(TabelaHash *tabelaHash) {
+    if(tabelaHash->qtdSorteios > 0) {
+        int chave = 0;
 
-    int chave = 0;
+        printCiano("Qual o número do sorteio que você deseja remover? ");
+        scanf("%i", &chave);
 
-    printCiano("Qual o número do sorteio que você deseja buscar? ");
-    scanf("%i", &chave);
-
-    removerConcursoTabela(tabelaHash, chave);
-
+        removerConcursoTabela(tabelaHash, chave);
+     } else {
+        printAmarelo("Não existem concursos armazenados na tabela!\n");
+    }
 }
 
 
+/**
+ * @brief Método responsável pela visualização 
+ * dos sorteios inseridos na tabela
+ * 
+ * @param tabelaHash
+ */
 void visualizarConcursos(TabelaHash *tabelaHash) {
     if(tabelaHash->qtdSorteios > 0) {
         printMagenta("Lista de sorteios presentes na tabela:\n");
@@ -92,6 +186,12 @@ void visualizarConcursos(TabelaHash *tabelaHash) {
 }
 
 
+/**
+ * @brief Método auxiliar para o carregamentos 
+ * dos dados a partir de um arquivo
+ * 
+ * @param tabelaHash
+ */
 void carregarConcursosArquivo(TabelaHash *tabelaHash) {
     char nomeArquivo[200];
 
@@ -102,7 +202,13 @@ void carregarConcursosArquivo(TabelaHash *tabelaHash) {
 }
 
 
-void apresentarEstatisticas(TabelaHash *tabela) {
+/**
+ * @brief Método auxiliar para a apresentação das estatísticas
+ * dos dados presentes na tabela
+ * 
+ * @param tabelaHash
+ */
+void apresentarEstatisticas(TabelaHash *tabelaHash) {
     int opcao = 0;
 
     while(opcao < 1 || opcao > 4) {
@@ -117,19 +223,19 @@ void apresentarEstatisticas(TabelaHash *tabela) {
             switch (opcao) {
                 case 1:
                     printVerde("Você escolheu a opção: 1 - Quantidade de sorteios de um número\n\n");
-                    qtdSorteiosPorNumero(tabela);
+                    qtdSorteiosPorNumero(tabelaHash);
                     break;
                 case 2:
                     printVerde("Você escolheu a opção: 2 - Quantidade de concursos em um determinado ano\n\n");
-                    qtdSorteiosPorAno(tabela);
+                    qtdSorteiosPorAno(tabelaHash);
                     break;
                 case 3:
                     printVerde("Você escolheu a opção: 3 - Dez Números Mais Sorteados\n\n");
-                    dezNumerosMaisSorteados(tabela);
+                    dezNumerosMaisSorteados(tabelaHash);
                     break;
                 case 4:
                     printVerde("Você escolheu a opção: 4 - Dez Números Menos Sorteados\n\n");
-                    dezNumerosMenosSorteados(tabela);
+                    dezNumerosMenosSorteados(tabelaHash);
                     break;
                 default:
                     break;
@@ -139,3 +245,50 @@ void apresentarEstatisticas(TabelaHash *tabela) {
         }
     }
 }
+
+
+/**
+ * @brief Método auxiliar responsável por ordenar 
+ * os números sorteados para a apresentação das estatísticas
+ * 
+ * @param numerosSorteados
+ */
+void ordenarNumerosSorteados(NumerosSorteados numerosSorteados[]) {
+    int j, qAtual, nAtual;
+    for(int i = 1; i < 60; i++) {
+        qAtual = numerosSorteados[i].qtd;
+        nAtual = numerosSorteados[i].numero;
+        j = i - 1;
+        while(j >= 0 && numerosSorteados[j].qtd > qAtual) {
+            numerosSorteados[j+1].qtd = numerosSorteados[j].qtd;
+            numerosSorteados[j+1].numero = numerosSorteados[j].numero;
+            j = j - 1;
+        }
+        numerosSorteados[j+1].qtd = qAtual;
+        numerosSorteados[j+1].numero = nAtual;
+    }
+}
+
+
+/**
+ * @brief Método responsável por liberar a tabela
+ * 
+ * @param tabelaHash
+ */
+void liberarTabela(TabelaHash *tabelaHash) {
+    for(int i = 0; i < tabelaHash->tamanho; i++){
+        No* no = tabelaHash->tabela[i];
+        
+        while(no != NULL) {
+            No* temp = no;
+            no = no->proximo;
+            
+            free(temp);
+        }
+    }
+    
+    free(tabelaHash->tabela);
+    free(tabelaHash);
+}
+
+
