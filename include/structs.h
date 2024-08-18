@@ -9,15 +9,16 @@ typedef struct sorteio {
 } Sorteio;
 
 
-/**
- * Estrutura responsável por representar 
- * os Nós que compõe a lista
- */
 typedef struct no {
     Sorteio sorteio;
-    int idSorteio;
     struct no *proximo;
 } No;
+
+typedef struct tabelaHash {
+    No** tabela;
+    int tamanho;
+    int qtdSorteios;
+} TabelaHash;
 
 
 #endif
