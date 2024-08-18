@@ -37,7 +37,7 @@ void qtdSorteiosPorNumero(TabelaHash *tabelaHash) {
 
         if(cont == 0) {
             printAmarelo("\nNão encontramos nenhum sorteio do número [");
-            printf("%i\n", numero);
+            printf("%i", numero);
             printAmarelo("] dentre os");
             printf(" %i ", tabelaHash->qtdSorteios);
             printAmarelo("armazenados!\n");

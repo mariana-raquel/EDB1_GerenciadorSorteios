@@ -94,8 +94,8 @@ void removerConcursoTabela(TabelaHash *tabelaHash, int chave) {
             atual = atual->proximo;
         }
 
-        if(atual == NULL){
-            printVermelho("Desculpe, não encontramos esse sorteio na lista! Verifique se informou o número corretamente\n");
+        if(atual == NULL) {
+            printVermelho("\nDesculpe, não encontramos esse sorteio na lista! Verifique se informou o número corretamente\n");
         } else {
 
             if(anterior == NULL){
@@ -113,6 +113,8 @@ void removerConcursoTabela(TabelaHash *tabelaHash, int chave) {
             printVerde("] removido com sucesso!\n");
 
         }   
+    } else {
+        printVermelho("\nDesculpe, não encontramos esse sorteio na lista! Verifique se informou o número corretamente\n");
     }
 }
 
